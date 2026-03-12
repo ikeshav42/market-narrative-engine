@@ -31,6 +31,9 @@ Each news article is scored against the company using a weighted composite:
 
 ```
 score = 0.45(direct) + 0.40(semantic) + 0.10(source) + 0.05(temporal)
+
+if breaking_news:
+    score = min(1.0, score + 0.2)
 ```
 
 ### Direct Match (45%)

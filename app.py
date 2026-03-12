@@ -16,7 +16,10 @@ load_dotenv()
 # Download GloVe on first run
 download_glove()
 
-FINNHUB_API_KEY = os.getenv('FINNHUB_API_KEY', '')
+try:
+    FINNHUB_API_KEY = st.secrets.get('FINNHUB_API_KEY', '')
+except:
+    FINNHUB_API_KEY = os.getenv('FINNHUB_API_KEY', '')
 
 st.set_page_config(
     page_title="Market Narrative Engine",

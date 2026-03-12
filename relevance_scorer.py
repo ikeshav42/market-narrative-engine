@@ -292,8 +292,13 @@ class RelevanceScorer:
             for component, weight in self.WEIGHTS.items()
         )
 
-        confidence = self._compute_confidence(breakdown, len(full_text))
         is_breaking = self._is_breaking_news(title, summary)
+
+        # Boost breaking news by 20%
+        if is_breaking:
+            overall_score = min(1.0, overall_score + 0.2)
+
+        confidence = self._compute_confidence(breakdown, len(full_text))
 
         return RelevanceResult(
             overall_score=round(overall_score, 3),
