@@ -9,8 +9,12 @@ from dotenv import load_dotenv
 
 from data_fetcher import fetch_price_data, fetch_news_headlines, fetch_intraday_data, fetch_company_info
 from relevance_scorer import get_scorer
+from download_glove import download_glove
 
 load_dotenv()
+
+# Download GloVe on first run
+download_glove()
 
 FINNHUB_API_KEY = os.getenv('FINNHUB_API_KEY', '')
 

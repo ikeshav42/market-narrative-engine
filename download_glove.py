@@ -15,18 +15,22 @@ def download_glove():
     zip_path = os.path.join(DATA_DIR, "glove.6B.zip")
 
     if os.path.exists(target_path):
-        print("GloVe embeddings already present.")
-        return
+        return True
 
-    print("Downloading GloVe embeddings (~862MB)...")
-    urllib.request.urlretrieve(GLOVE_URL, zip_path)
+    try:
+        print("Downloading GloVe embeddings (~862MB)... This may take a few minutes.")
+        urllib.request.urlretrieve(GLOVE_URL, zip_path)
 
-    print("Extracting...")
-    with zipfile.ZipFile(zip_path, 'r') as z:
-        z.extract(TARGET_FILE, DATA_DIR)
+        print("Extracting...")
+        with zipfile.ZipFile(zip_path, 'r') as z:
+            z.extract(TARGET_FILE, DATA_DIR)
 
-    os.remove(zip_path)
-    print(f"Done! Saved to {target_path}")
+        os.remove(zip_path)
+        print(f"Done! Saved to {target_path}")
+        return True
+    except Exception as e:
+        print(f"Failed to download GloVe: {e}")
+        return False
 
 
 if __name__ == "__main__":
