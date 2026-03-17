@@ -10,28 +10,19 @@ from typing import Optional
 def fetch_price_data(ticker: str) -> Optional[dict]:
     try:
         stock = yf.Ticker(ticker)
-        info = stock.info
 
-        if not info or 'regularMarketPrice' not in info:
-            hist = stock.history(period='1d')
-            if hist.empty:
-                return None
+        hist = stock.history(period='1d')
+        if hist.empty:
+            return None
 
-            current_price = hist['Close'].iloc[-1]
-            open_price = hist['Open'].iloc[-1]
-            high_price = hist['High'].iloc[-1]
-            low_price = hist['Low'].iloc[-1]
+        current_price = hist['Close'].iloc[-1]
+        open_price = hist['Open'].iloc[-1]
+        high_price = hist['High'].iloc[-1]
+        low_price = hist['Low'].iloc[-1]
 
-            hist_52w = stock.history(period='1y')
-            week_52_high = hist_52w['High'].max() if not hist_52w.empty else None
-            week_52_low = hist_52w['Low'].min() if not hist_52w.empty else None
-        else:
-            current_price = info.get('regularMarketPrice') or info.get('currentPrice')
-            open_price = info.get('regularMarketOpen') or info.get('open')
-            high_price = info.get('regularMarketDayHigh') or info.get('dayHigh')
-            low_price = info.get('regularMarketDayLow') or info.get('dayLow')
-            week_52_high = info.get('fiftyTwoWeekHigh')
-            week_52_low = info.get('fiftyTwoWeekLow')
+        hist_52w = stock.history(period='1y')
+        week_52_high = hist_52w['High'].max() if not hist_52w.empty else None
+        week_52_low = hist_52w['Low'].min() if not hist_52w.empty else None
 
         return {
             'ticker': ticker.upper(),
