@@ -1,12 +1,13 @@
 # Market Narrative Engine
 
-Real-time stock dashboard with news relevance scoring using GloVe word embeddings.
+Real-time stock dashboard with news relevance scoring and sentiment analysis.
 
 ## Features
 
 - Live stock prices with auto-refresh
 - Interactive candlestick/line/area charts
 - News ranked by semantic relevance to the company
+- Sentiment analysis (Bullish/Bearish/Neutral) for each news article
 
 ## Setup
 
@@ -63,11 +64,15 @@ Exponential decay with 6-hour half-life:
 score = 0.5 ^ (hours_elapsed / 6)
 ```
 
+## Sentiment Analysis
+
+Each article is classified as Bullish, Bearish, or Neutral using `mrm8488/distilroberta-finetuned-financial-news-sentiment-analysis`, a DistilRoBERTa model fine-tuned on financial news. The sentiment badge appears on the headline and the compound score is shown in Score Details.
+
 ## Roadmap
 
 - [ ] News summarization using LLMs
 - [ ] Price movement predictions (LSTM/transformer models)
-- [ ] Sentiment analysis pipeline
+- [x] Sentiment analysis pipeline
 - [ ] Historical data warehouse
 - [ ] Correlation analysis between news sentiment and price action
 
@@ -76,3 +81,4 @@ score = 0.5 ^ (hours_elapsed / 6)
 - Streamlit + Plotly
 - yfinance for market data
 - GloVe 50d word embeddings (Stanford NLP)
+- DistilRoBERTa (HuggingFace) for sentiment analysis
