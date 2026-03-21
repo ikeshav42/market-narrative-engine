@@ -379,8 +379,10 @@ def main():
                     indicator = "🔴"
 
                 breaking_badge = " 🔔 BREAKING" if relevance.is_breaking else ""
+                sentiment_emoji = {"Bullish": "📈", "Bearish": "📉", "Neutral": "➡️"}
+                sentiment_badge = f" {sentiment_emoji[relevance.sentiment_label]} {relevance.sentiment_label}"
 
-                with st.expander(f"{indicator} **{article['title']}**{breaking_badge}", expanded=(i < 3)):
+                with st.expander(f"{indicator} **{article['title']}**{breaking_badge}{sentiment_badge}", expanded=(i < 3)):
                     col_score, col_meta = st.columns([2, 1])
                     with col_score:
                         st.progress(relevance.overall_score, text=f"Relevance: {score_pct}%")
@@ -402,6 +404,10 @@ def main():
                         for component, score in relevance.breakdown.items():
                             label = component.replace('_', ' ').title()
                             st.progress(score, text=f"{label}: {int(score * 100)}%")
+                        st.markdown("**Sentiment**")
+                        compound = relevance.sentiment_score
+                        normalized = (compound + 1) / 2
+                        st.progress(normalized, text=f"{relevance.sentiment_label} (compound: {compound:+.3f})")
 
                     if article.get('url'):
                         st.markdown(f"[Read more]({article['url']})")

@@ -7,7 +7,10 @@ from datetime import datetime, timezone
 from dataclasses import dataclass, field
 from typing import Optional
 
+import logging
 import numpy as np
+import transformers
+from transformers import pipeline as hf_pipeline
 
 
 @dataclass
@@ -16,6 +19,8 @@ class RelevanceResult:
     confidence: float
     breakdown: dict = field(default_factory=dict)
     is_breaking: bool = False
+    sentiment_score: float = 0.0
+    sentiment_label: str = "Neutral"
 
 
 class GloveEmbeddings:
@@ -70,6 +75,42 @@ class GloveEmbeddings:
 _glove = GloveEmbeddings()
 
 
+class FinBertSentiment:
+    """Sentiment model for financial news."""
+
+    _instance = None
+    _pipe = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def load(self):
+        if self._pipe is None:
+            # suppress download warnings
+            transformers.logging.set_verbosity_error()
+            logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
+            self._pipe = hf_pipeline(
+                "text-classification",
+                model="mrm8488/distilroberta-finetuned-financial-news-sentiment-analysis",
+                truncation=True,
+                max_length=512,
+            )
+        return self
+
+    def predict(self, text: str) -> tuple:
+        result = self._pipe(text[:2000])[0]
+        label = result['label']
+        score = result['score']
+        compound = round(score if label == 'positive' else -score if label == 'negative' else 0.0, 3)
+        sentiment_label = {'positive': 'Bullish', 'negative': 'Bearish', 'neutral': 'Neutral'}[label]
+        return compound, sentiment_label
+
+
+_finbert = FinBertSentiment()
+
+
 class RelevanceScorer:
     """Scores news articles for relevance to a company using GloVe embeddings."""
 
@@ -115,6 +156,7 @@ class RelevanceScorer:
         self._glove = _glove
         self._glove_loaded = self._glove.load(glove_path)
         self._company_vector_cache: dict = {}
+        self._finbert = _finbert.load()
 
     def _preprocess_text(self, text: str) -> str:
         if not text:
@@ -251,6 +293,9 @@ class RelevanceScorer:
         except Exception:
             return 0.5
 
+    def _compute_sentiment(self, text: str) -> tuple:
+        return self._finbert.predict(text)
+
     def _is_breaking_news(self, title: str, summary: str = '') -> bool:
         text = (title + ' ' + summary).lower()
         return any(kw in text for kw in self.BREAKING_KEYWORDS)
@@ -299,12 +344,15 @@ class RelevanceScorer:
             overall_score = min(1.0, overall_score + 0.2)
 
         confidence = self._compute_confidence(breakdown, len(full_text))
+        sentiment_score, sentiment_label = self._compute_sentiment(full_text)
 
         return RelevanceResult(
             overall_score=round(overall_score, 3),
             confidence=round(confidence, 3),
             breakdown={k: round(v, 3) for k, v in breakdown.items()},
-            is_breaking=is_breaking
+            is_breaking=is_breaking,
+            sentiment_score=sentiment_score,
+            sentiment_label=sentiment_label
         )
 
     def score_batch(self, articles: list, company_info: dict) -> list:
